@@ -91,10 +91,15 @@ set_config() {
 # ################################################################################
 # ################################################################################
 
-mkdir -p /tmp/custom-wordpress-code-cloned
-git clone ${REPOSITORY_URL} /tmp/custom-wordpress-code-cloned
-cd /tmp/custom-wordpress-code-cloned
-git --work-tree=/var/www/html checkout ${REPOSITORY_TAG} -f
+for i in ${REPOSITORIES}
+do
+	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
+	echo "Installing ${i} in /tmp/${repo_id}"
+	mkdir -p /tmp/${repo_id}
+	git clone ${i} /tmp/${repo_id}
+	cd /tmp/${repo_id}
+	git --work-tree=/var/www/html checkout -f
+done
 
 cd /var/www/html
 
