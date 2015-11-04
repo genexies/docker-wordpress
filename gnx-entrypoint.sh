@@ -53,15 +53,9 @@ if [ -z "$WORDPRESS_DB_PASSWORD" ]; then
 	exit 1
 fi
 
-if ! [ -e index.php -a -e wp-includes/version.php ]; then
-	echo >&2 "WordPress not found in $(pwd) - copying now..."
-	if [ "$(ls -A)" ]; then
-		echo >&2 "WARNING: $(pwd) is not empty - press Ctrl+C now if this is an error!"
-		( set -x; ls -A; sleep 10 )
-	fi
-	tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -
-	echo >&2 "Complete! WordPress has been successfully copied to $(pwd)"
-fi
+echo >&2 "Copying now Wordpress in $(pwd) ..."
+tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -
+echo >&2 "Complete! WordPress has been successfully copied to $(pwd)"
 
 # see http://stackoverflow.com/a/2705678/433558
 sed_escape_lhs() {
@@ -94,16 +88,21 @@ set_config() {
 for i in ${REPOSITORIES}
 do
 	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
-	echo "Installing ${i} in /tmp/${repo_id}"
+	echo >&2 "Cloning repo ${i} in /tmp/${repo_id} ..."
 	mkdir -p /tmp/${repo_id}
 	git clone ${i} /tmp/${repo_id}
+	echo >&2 "Done cloning repo ${i}"
+
+	echo >&2 "Installing repo ${i} in /var/www/html ..."
 	cd /tmp/${repo_id}
 	git --work-tree=/var/www/html checkout -f
+	echo >&2 "Done installing repo ${i}"
 done
 
 cd /var/www/html
 
 # wp-config.php might be different among environments...
+echo >&2 "Configuring Wordpress using environment ${ENVIRONMENT} ..."
 cp wp-config.${ENVIRONMENT}.php wp-config.php
 
 # Now, inject DB config from container execution env...
