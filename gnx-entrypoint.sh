@@ -2,6 +2,10 @@
 
 set -e
 
+log() {
+	echo -e >&2 "[${1}]\t$(date +%Y-%m-%d:%H:%M:%S.%N)\t${2}"
+}
+
 # ################################################################################
 # ################################################################################
 # ################################################################################
@@ -24,16 +28,16 @@ if [ -n "$MYSQL_PORT_3306_TCP" ]; then
 	if [ -z "$WORDPRESS_DB_HOST" ]; then
 		WORDPRESS_DB_HOST='mysql'
 	else
-		echo >&2 'warning: both WORDPRESS_DB_HOST and MYSQL_PORT_3306_TCP found'
-		echo >&2 "  Connecting to WORDPRESS_DB_HOST ($WORDPRESS_DB_HOST)"
-		echo >&2 '  instead of the linked mysql container'
+		log WARN 'both WORDPRESS_DB_HOST and MYSQL_PORT_3306_TCP found'
+		log WARN "  Connecting to WORDPRESS_DB_HOST ($WORDPRESS_DB_HOST)"
+		log WARN '  instead of the linked mysql container'
 	fi
 fi
 
 if [ -z "$WORDPRESS_DB_HOST" ]; then
-	echo >&2 'error: missing WORDPRESS_DB_HOST and MYSQL_PORT_3306_TCP environment variables'
-	echo >&2 '  Did you forget to --link some_mysql_container:mysql or set an external db'
-	echo >&2 '  with -e WORDPRESS_DB_HOST=hostname:port?'
+	log ERROR 'missing WORDPRESS_DB_HOST and MYSQL_PORT_3306_TCP environment variables'
+	log ERROR '  Did you forget to --link some_mysql_container:mysql or set an external db'
+	log ERROR '  with -e WORDPRESS_DB_HOST=hostname:port?'
 	exit 1
 fi
 
@@ -46,16 +50,16 @@ fi
 : ${WORDPRESS_DB_NAME:=wordpress}
 
 if [ -z "$WORDPRESS_DB_PASSWORD" ]; then
-	echo >&2 'error: missing required WORDPRESS_DB_PASSWORD environment variable'
-	echo >&2 '  Did you forget to -e WORDPRESS_DB_PASSWORD=... ?'
-	echo >&2
-	echo >&2 '  (Also of interest might be WORDPRESS_DB_USER and WORDPRESS_DB_NAME.)'
+	log ERROR 'missing required WORDPRESS_DB_PASSWORD environment variable'
+	log ERROR '  Did you forget to -e WORDPRESS_DB_PASSWORD=... ?'
+	log ERROR
+	log ERROR '  (Also of interest might be WORDPRESS_DB_USER and WORDPRESS_DB_NAME.)'
 	exit 1
 fi
 
-echo >&2 "Copying now Wordpress in $(pwd) ..."
+log DEBUG "Copying now Wordpress in $(pwd) ..."
 tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -
-echo >&2 "Complete! WordPress has been successfully copied to $(pwd)"
+log INFO "Complete! WordPress has been successfully copied to $(pwd)"
 
 # see http://stackoverflow.com/a/2705678/433558
 sed_escape_lhs() {
@@ -88,22 +92,27 @@ set_config() {
 for i in ${REPOSITORIES}
 do
 	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
-	echo >&2 "Cloning repo ${i} in /tmp/${repo_id} ..."
+	log DEBUG "Cloning repo ${i} in /tmp/${repo_id} ..."
 	mkdir -p /tmp/${repo_id}
 	git clone ${i} /tmp/${repo_id}
-	echo >&2 "Done cloning repo ${i}"
+	log INFO "Done cloning repo ${i}"
 
-	echo >&2 "Installing repo ${i} in /var/www/html ..."
+	log DEBUG "Installing repo ${i} in /var/www/html ..."
 	cd /tmp/${repo_id}
 	git --work-tree=/var/www/html checkout -f
-	echo >&2 "Done installing repo ${i}"
+	log INFO "Done installing repo ${i}"
 done
 
 cd /var/www/html
 
 # wp-config.php might be different among environments...
-echo >&2 "Configuring Wordpress using environment ${ENVIRONMENT} ..."
+log INFO "Configuring Wordpress using environment ${ENVIRONMENT} ..."
 cp wp-config.${ENVIRONMENT}.php wp-config.php
+cp htaccess.${ENVIRONMENT}.txt .htaccess
+cp robots.${ENVIRONMENT}.txt robots.txt
+
+chown www-data:www-data wp-config.php .htaccess robots.txt
+chmod 444 wp-config.php .htaccess robots.txt
 
 # Now, inject DB config from container execution env...
 set_config 'DB_HOST' "$WORDPRESS_DB_HOST"
