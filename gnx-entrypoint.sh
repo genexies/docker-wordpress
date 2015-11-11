@@ -111,7 +111,7 @@ cp wp-config.${ENVIRONMENT}.php wp-config.php
 cp htaccess.${ENVIRONMENT}.txt .htaccess
 cp robots.${ENVIRONMENT}.txt robots.txt
 
-chown www-data:www-data wp-config.php .htaccess robots.txt
+chown -R www-data:www-data *
 chmod 444 wp-config.php .htaccess robots.txt
 
 # Now, inject DB config from container execution env...
