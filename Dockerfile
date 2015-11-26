@@ -25,7 +25,7 @@ RUN chmod u+x /gnx-entrypoint.sh
 
 
 # Our entry-point that fallsback to parent's
-#ENTRYPOINT ["/gnx-entrypoint.sh"]
+ENTRYPOINT ["/gnx-entrypoint.sh"]
 
 # Same default parameter to parent's entry-point
-#CMD ["apache2-foreground"]
+CMD ["apache2-foreground"]
