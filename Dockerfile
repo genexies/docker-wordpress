@@ -13,8 +13,10 @@ MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 
 RUN apt-get update && apt-get install -y \
         git \
-    && docker-php-ext-install apc
+    && docker-php-ext-install opcache
 
+COPY opcache.ini /opcache.ini
+RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 
 COPY gnx-entrypoint.sh /gnx-entrypoint.sh
@@ -23,7 +25,7 @@ RUN chmod u+x /gnx-entrypoint.sh
 
 
 # Our entry-point that fallsback to parent's
-ENTRYPOINT ["/gnx-entrypoint.sh"]
+#ENTRYPOINT ["/gnx-entrypoint.sh"]
 
 # Same default parameter to parent's entry-point
-CMD ["apache2-foreground"]
+#CMD ["apache2-foreground"]
