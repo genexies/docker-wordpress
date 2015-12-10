@@ -11,8 +11,13 @@ MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 #                               Wordpress
 #
 
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y \
+        git \
+        sudo
+RUN docker-php-ext-install opcache
 
+COPY opcache.ini /opcache.ini
+RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 
 COPY gnx-entrypoint.sh /gnx-entrypoint.sh
