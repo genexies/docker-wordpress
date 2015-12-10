@@ -13,7 +13,8 @@ MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 
 RUN apt-get update && apt-get install -y \
         git \
-    && docker-php-ext-install opcache
+        sudo
+RUN docker-php-ext-install opcache
 
 COPY opcache.ini /opcache.ini
 RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
