@@ -1,4 +1,4 @@
-FROM wordpress:4.3-apache
+FROM wordpress:4.3-fpm
 MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 #
 # @param[in] ENVIRONMENT        Configuration environment to use:
