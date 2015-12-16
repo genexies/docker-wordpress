@@ -30,7 +30,6 @@ RUN cd /usr/src/php/ext && \
     mv memcache-2.2.7 memcache
 
 RUN docker-php-ext-configure memcache && docker-php-ext-install memcache
-RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 
 
