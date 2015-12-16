@@ -36,7 +36,6 @@ RUN docker-php-ext-install opcache
 COPY opcache.ini /opcache.ini
 RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
-
 # Download manually, and install using PHP docker scripts...
 RUN cd /usr/src/php/ext && \
     wget https://pecl.php.net/get/memcache-2.2.7.tgz && \
@@ -44,7 +43,6 @@ RUN cd /usr/src/php/ext && \
     mv memcache-2.2.7 memcache
 
 RUN docker-php-ext-configure memcache && docker-php-ext-install memcache
-
 
 # Install Apache
 RUN apt-get install -y apache2
