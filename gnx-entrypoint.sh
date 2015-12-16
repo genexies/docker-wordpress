@@ -6,6 +6,10 @@ log() {
 	echo -e >&2 "[${1}]\t$(date +%Y-%m-%d:%H:%M:%S.%N)\t${2}"
 }
 
+sudorun() {
+	sudo -u www-data bash -c "$1"
+}
+
 # ################################################################################
 # ################################################################################
 # ################################################################################
@@ -57,8 +61,10 @@ if [ -z "$WORDPRESS_DB_PASSWORD" ]; then
 	exit 1
 fi
 
+chown www-data:www-data /usr/src/wordpress
+
 log DEBUG "Copying now Wordpress in $(pwd) ..."
-tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -
+sudorun "tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -"
 log INFO "Complete! WordPress has been successfully copied to $(pwd)"
 
 # see http://stackoverflow.com/a/2705678/433558
@@ -78,7 +84,7 @@ set_config() {
 	if [ "${key:0:1}" = '$' ]; then
 		regex="^(\s*)$(sed_escape_lhs "$key")\s*="
 	fi
-	sed -ri "s/($regex\s*)(['\"]).*\3/\1$(sed_escape_rhs "$(php_escape "$value")")/" wp-config.php
+	sed -ri "s/($regex\s*)(['\"]).*\3/\1$(sed_escape_rhs "$(php_escape "$value")")/" /var/www/html/wp-config.php
 }
 
 # ################################################################################
@@ -94,24 +100,21 @@ do
 	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
 	log DEBUG "Cloning repo ${i} in /tmp/${repo_id} ..."
 	mkdir -p /tmp/${repo_id}
-	git clone ${i} /tmp/${repo_id}
+	chown www-data /tmp/${repo_id}
+	sudorun "git clone ${i} /tmp/${repo_id}"
 	log INFO "Done cloning repo ${i}"
 
 	log DEBUG "Installing repo ${i} in /var/www/html ..."
-	cd /tmp/${repo_id}
-	git --work-tree=/var/www/html checkout -f
+	sudorun "cd /tmp/${repo_id} && git --work-tree=/var/www/html checkout -f"
 	log INFO "Done installing repo ${i}"
 done
 
-cd /var/www/html
-
 # wp-config.php might be different among environments...
 log INFO "Configuring Wordpress using environment ${ENVIRONMENT} ..."
-cp wp-config.${ENVIRONMENT}.php wp-config.php
-cp htaccess.${ENVIRONMENT}.txt .htaccess
-cp robots.${ENVIRONMENT}.txt robots.txt
+sudorun "cp /var/www/html/wp-config.${ENVIRONMENT}.php /var/www/html/wp-config.php"
+sudorun "cp /var/www/html/htaccess.${ENVIRONMENT}.txt /var/www/html/.htaccess"
+sudorun "cp /var/www/html/robots.${ENVIRONMENT}.txt /var/www/html/robots.txt"
 
-chown -R www-data:www-data *
 chmod 444 wp-config.php .htaccess robots.txt
 
 # Now, inject DB config from container execution env...
@@ -121,4 +124,5 @@ set_config 'DB_PASSWORD' "$WORDPRESS_DB_PASSWORD"
 set_config 'DB_NAME' "$WORDPRESS_DB_NAME"
 
 # Run original parameter (CMD in image / command in container)
+cd /var/www/html
 exec "$@"

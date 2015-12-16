@@ -1,4 +1,4 @@
-FROM wordpress:4.3.1-fpm
+FROM wordpress:4.3-apache
 MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 #
 # @param[in] ENVIRONMENT        Configuration environment to use:
@@ -21,6 +21,9 @@ COPY etc/supervisor/conf.d/supervisord.conf /etc/supervisor/conf.d/supervisord.c
 
 # Install Git
 RUN apt-get install -y git
+
+# Install sudo
+RUN apt-get install -y sudo
 
 # Install OPcache
 RUN docker-php-ext-install opcache
