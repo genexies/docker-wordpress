@@ -7,7 +7,7 @@ log() {
 }
 
 sudorun() {
-	sudo -u www-data bash -c "$1"
+	sudo bash -c "$1"
 }
 
 # ################################################################################
@@ -66,6 +66,8 @@ chown www-data:www-data /usr/src/wordpress
 log DEBUG "Copying now Wordpress in $(pwd) ..."
 sudorun "tar cf - --one-file-system -C /usr/src/wordpress . | tar xf -"
 log INFO "Complete! WordPress has been successfully copied to $(pwd)"
+
+chown -R www-data:www-data .
 
 # see http://stackoverflow.com/a/2705678/433558
 sed_escape_lhs() {
