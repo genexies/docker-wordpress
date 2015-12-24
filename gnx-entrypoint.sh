@@ -95,8 +95,8 @@ set_config() {
 # ################################################################################
 # ################################################################################
 
-for i in ${REPOSITORIES}
-do
+while [ "$REPOSITORIES" ]; do
+    i=${REPOSITORIES%%;*}
 	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
 	log DEBUG "Cloning repo ${i} in /tmp/${repo_id} ..."
 	mkdir -p /tmp/${repo_id}
@@ -107,6 +107,9 @@ do
 	log DEBUG "Installing repo ${i} in /var/www/html ..."
 	sudorun "cd /tmp/${repo_id} && git --work-tree=/var/www/html checkout -f"
 	log INFO "Done installing repo ${i}"
+	[ "$REPOSITORIES" = "$i" ] && \
+        REPOSITORIES='' || \
+        REPOSITORIES="${REPOSITORIES#*;}"
 done
 
 # wp-config.php might be different among environments...
