@@ -112,13 +112,23 @@ while [ "$REPOSITORIES" ]; do
 		REPOSITORIES="${REPOSITORIES#*;}"
 done
 
-# wp-config.php might be different among environments...
-log INFO "Configuring Wordpress using environment ${ENVIRONMENT} ..."
-sudorun "cp /var/www/html/wp-config.${ENVIRONMENT}.php /var/www/html/wp-config.php"
-sudorun "cp /var/www/html/htaccess.${ENVIRONMENT}.txt /var/www/html/.htaccess"
-sudorun "cp /var/www/html/robots.${ENVIRONMENT}.txt /var/www/html/robots.txt"
 
-chmod 444 wp-config.php .htaccess robots.txt
+if [[ -f /var/www/html/wp-config.${ENVIRONMENT}.php ]]; then
+	log INFO "Configuring Wordpress using environment ${ENVIRONMENT} ..."
+	sudorun "cp /var/www/html/wp-config.${ENVIRONMENT}.php /var/www/html/wp-config.php"
+	chmod 444 wp-config.php
+fi
+if [[ -f /var/www/html/htaccess.${ENVIRONMENT}.txt ]]; then
+	log INFO "Configuring .htaccess using environment ${ENVIRONMENT} ..."
+	sudorun "cp /var/www/html/htaccess.${ENVIRONMENT}.txt /var/www/html/.htaccess"
+	chmod 444 .htaccess
+fi
+if [[ -f /var/www/html/robots.${ENVIRONMENT}.txt ]]; then
+	log INFO "Configuring SEO - robots.txt using environment ${ENVIRONMENT} ..."
+	sudorun "cp /var/www/html/robots.${ENVIRONMENT}.txt /var/www/html/robots.txt"
+	chmod 444 robots.txt
+fi
+
 
 # Now, inject DB config from container execution env...
 set_config 'DB_HOST' "$WORDPRESS_DB_HOST"
