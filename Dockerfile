@@ -6,6 +6,8 @@ MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 # @param[in] REPOSITORIES       Git repositories to clone (each: https including
 #                               credentials in URL)
 #
+# @param[in] ADDITIONAL_TARGZ_URLS   Additional Tar.Gz files URLs to download and uncompress in /var/www/html
+#
 # @param[in] DEBUG              If present, all debug options are enabled in
 #                               Wordpress
 #
@@ -22,6 +24,7 @@ RUN apt-get update && apt-get install -y \
   php5-fpm \
   apache2-mpm-event \
   libapache2-mod-fastcgi \
+  curl \
   && rm -rf /var/lib/apt/lists/*
 
 COPY etc/supervisor/conf.d/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -55,6 +58,14 @@ RUN a2enmod rewrite actions
 COPY gnx-entrypoint.sh /gnx-entrypoint.sh
 RUN chmod u+x /gnx-entrypoint.sh
 ENTRYPOINT ["/gnx-entrypoint.sh"]
+
+
+ENV REPOSITORIES=
+ENV ADDITIONAL_TARGZ_URLS=
+ENV DEBUG=
+
+EXPOSE 80
+
 
 # Same default parameter to parent's entry-point
 CMD ["/usr/bin/supervisord"]

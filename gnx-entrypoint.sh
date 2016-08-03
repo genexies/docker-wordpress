@@ -17,6 +17,22 @@ sudorun() {
 # ################################################################################
 # ################################################################################
 # ################################################################################
+while [ "$ADDITIONAL_TARGZ_URLS" ]; do
+	i=${ADDITIONAL_TARGZ_URLS%%;*}
+	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
+	log DEBUG "Dowloading tar.gz ${i} in /tmp/${repo_id} ..."
+	mkdir -p /tmp/${repo_id}
+	chown www-data /tmp/${repo_id}
+	sudorun "curl -L ${i} -o /tmp/${repo_id}/output.tar.gz"
+	log INFO "Done downloading URL ${i}"
+
+	log DEBUG "Uncompressing ${i} in /var/www/html ..."
+	sudorun "cd /var/www/html && tar xvzf /tmp/${repo_id}/output.tar.gz"
+	log INFO "Done uncompressing ${i}"
+	[ "$ADDITIONAL_TARGZ_URLS" = "$i" ] && \
+		ADDITIONAL_TARGZ_URLS='' || \
+		ADDITIONAL_TARGZ_URLS="${ADDITIONAL_TARGZ_URLS#*;}"
+done
 
 
 # noop
