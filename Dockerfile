@@ -35,10 +35,13 @@ COPY opcache.ini /opcache.ini
 RUN cat /opcache.ini >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 # Download manually, and install using PHP docker scripts...
-WORKDIR /usr/src/php/ext
+RUN mkdir -p /usr/src/php/ext
+RUN cd /usr/src/php/ext
 RUN wget https://pecl.php.net/get/memcache-2.2.7.tgz && \
     tar xvzf memcache-2.2.7.tgz && \
     mv memcache-2.2.7 memcache
+RUN cd -
+RUN echo "Workdir: $PWD"
 
 RUN docker-php-ext-configure memcache && docker-php-ext-install memcache
 
