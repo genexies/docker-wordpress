@@ -152,6 +152,9 @@ set_config 'DB_USER' "$WORDPRESS_DB_USER"
 set_config 'DB_PASSWORD' "$WORDPRESS_DB_PASSWORD"
 set_config 'DB_NAME' "$WORDPRESS_DB_NAME"
 
+#GA 
+set_config 'GA_ACCOUNT' "$GOOGLE_ANALYTICS_ACCOUNT"
+
 # Run original parameter (CMD in image / command in container)
 cd /var/www/html
 exec "$@"
