@@ -112,18 +112,22 @@ set_config() {
 # ################################################################################
 
 while [ "$REPOSITORIES" ]; do
-	i=${REPOSITORIES%%;*}
-	repo_id=$(echo "${i}" | sed -e 's/[^A-Za-z0-9._-]/_/g')
-	log DEBUG "Cloning repo ${i} in /tmp/${repo_id} ..."
-	mkdir -p /tmp/${repo_id}
-	chown www-data /tmp/${repo_id}
-	sudorun "git clone ${i} /tmp/${repo_id}"
-	log INFO "Done cloning repo ${i}"
+	repo_url=${REPOSITORIES%%;*}
+	clone_dir="/tmp/$(echo ${repo_url} | sed -e 's/[^A-Za-z0-9._-]/_/g')"
+	if [ ! -d "$clone_dir" ]; then
+        log DEBUG "Cloning repo ${repo_url} in ${clone_dir} ..."
+        mkdir -p ${clone_dir}
+        chown www-data ${clone_dir}
+        sudorun "git clone ${repo_url} ${clone_dir}"
+        log INFO "Done cloning repo ${repo_url}"
 
-	log DEBUG "Installing repo ${i} in /var/www/html ..."
-	sudorun "cd /tmp/${repo_id} && git --work-tree=/var/www/html checkout -f"
-	log INFO "Done installing repo ${i}"
-	[ "$REPOSITORIES" = "$i" ] && \
+        log DEBUG "Installing repo ${repo_url} in /var/www/html ..."
+        sudorun "cd ${clone_dir} && git --work-tree=/var/www/html checkout -f"
+        log INFO "Done installing repo ${repo_url}"
+    else
+        log DEBUG "Repo ${repo_url} already cloned in ${clone_dir} ..."
+    fi
+	[ "$REPOSITORIES" = "$repo_url" ] && \
 		REPOSITORIES='' || \
 		REPOSITORIES="${REPOSITORIES#*;}"
 done
@@ -151,6 +155,9 @@ set_config 'DB_HOST' "$WORDPRESS_DB_HOST"
 set_config 'DB_USER' "$WORDPRESS_DB_USER"
 set_config 'DB_PASSWORD' "$WORDPRESS_DB_PASSWORD"
 set_config 'DB_NAME' "$WORDPRESS_DB_NAME"
+
+#GA 
+set_config 'GA_ACCOUNT' "$GOOGLE_ANALYTICS_ACCOUNT"
 
 # Run original parameter (CMD in image / command in container)
 cd /var/www/html
