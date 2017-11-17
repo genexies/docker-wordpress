@@ -110,42 +110,44 @@ set_config() {
 # ################################################################################
 # ################################################################################
 # ################################################################################
-
+APPLICATION_PATH=${APPLICATION_PATH:-/var/www/html}
 while [ "$REPOSITORIES" ]; do
-	repo_url=${REPOSITORIES%%;*}
-	clone_dir="/tmp/$(echo ${repo_url} | sed -e 's/[^A-Za-z0-9._-]/_/g')"
+	repo_url_and_branch=${REPOSITORIES%% *}
+	repo_url=${repo_url_and_branch%%\\*}
+	repo_branch=${repo_url_and_branch#*\\}
+	clone_dir="/tmp/$(echo ${repo_url_and_branch} | sed -e 's/[^A-Za-z0-9._-]/_/g')"
 	if [ ! -d "$clone_dir" ]; then
-        log DEBUG "Cloning repo ${repo_url} in ${clone_dir} ..."
+        log DEBUG "Cloning repo ${repo_url} with branch ${repo_branch} in ${clone_dir} ..."
         mkdir -p ${clone_dir}
         chown www-data ${clone_dir}
-        sudorun "git clone ${repo_url} ${clone_dir}"
-        log INFO "Done cloning repo ${repo_url}"
+        sudorun "git clone -b ${repo_branch} ${repo_url} ${clone_dir}"
+        log INFO "Done cloning repo ${repo_url} with branch ${repo_branch} in ${clone_dir}"
 
-        log DEBUG "Installing repo ${repo_url} in /var/www/html ..."
-        sudorun "cd ${clone_dir} && git --work-tree=/var/www/html checkout -f"
-        log INFO "Done installing repo ${repo_url}"
+        log DEBUG "Installing repo ${repo_url} with branch ${repo_branch} in ${APPLICATION_PATH} ..."
+        sudorun "cd ${clone_dir} && git --work-tree=${APPLICATION_PATH} checkout -f"
+        log INFO "Done installing repo ${repo_url} with branch ${repo_branch} in ${APPLICATION_PATH}"
     else
-        log DEBUG "Repo ${repo_url} already cloned in ${clone_dir} ..."
+        log DEBUG "Repo repo ${repo_url} with branch ${repo_branch} already cloned in ${clone_dir} ..."
     fi
-	[ "$REPOSITORIES" = "$repo_url" ] && \
+	[ "$REPOSITORIES" = "$repo_url_and_branch" ] && \
 		REPOSITORIES='' || \
-		REPOSITORIES="${REPOSITORIES#*;}"
+		REPOSITORIES=${REPOSITORIES#* }
 done
 
-
-if [[ -f /var/www/html/wp-config.${ENVIRONMENT}.php ]]; then
+# TODO: create a function for doing this:
+if [[ -f ${APPLICATION_PATH}/wp-config.${ENVIRONMENT}.php ]]; then
 	log INFO "Configuring Wordpress using environment ${ENVIRONMENT} ..."
-	sudorun "cp /var/www/html/wp-config.${ENVIRONMENT}.php /var/www/html/wp-config.php"
+	sudorun "cp ${APPLICATION_PATH}/wp-config.${ENVIRONMENT}.php ${APPLICATION_PATH}/wp-config.php"
 	chmod 444 wp-config.php
 fi
-if [[ -f /var/www/html/htaccess.${ENVIRONMENT}.txt ]]; then
+if [[ -f ${APPLICATION_PATH}/htaccess.${ENVIRONMENT}.txt ]]; then
 	log INFO "Configuring .htaccess using environment ${ENVIRONMENT} ..."
-	sudorun "cp /var/www/html/htaccess.${ENVIRONMENT}.txt /var/www/html/.htaccess"
+	sudorun "cp ${APPLICATION_PATH}/htaccess.${ENVIRONMENT}.txt ${APPLICATION_PATH}/.htaccess"
 	chmod 444 .htaccess
 fi
 if [[ -f /var/www/html/robots.${ENVIRONMENT}.txt ]]; then
 	log INFO "Configuring SEO - robots.txt using environment ${ENVIRONMENT} ..."
-	sudorun "cp /var/www/html/robots.${ENVIRONMENT}.txt /var/www/html/robots.txt"
+	sudorun "cp ${APPLICATION_PATH}/robots.${ENVIRONMENT}.txt ${APPLICATION_PATH}/robots.txt"
 	chmod 444 robots.txt
 fi
 
@@ -160,5 +162,5 @@ set_config 'DB_NAME' "$WORDPRESS_DB_NAME"
 set_config 'GA_ACCOUNT' "$GOOGLE_ANALYTICS_ACCOUNT"
 
 # Run original parameter (CMD in image / command in container)
-cd /var/www/html
+cd ${APPLICATION_PATH}
 exec "$@"

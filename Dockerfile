@@ -40,7 +40,8 @@ RUN wget https://pecl.php.net/get/memcache-2.2.7.tgz && \
     tar xvzf memcache-2.2.7.tgz && \
     mv memcache-2.2.7 memcache
 RUN docker-php-ext-configure memcache && docker-php-ext-install memcache
-WORKDIR /var/www/html
+ENV APPLICATION_PATH /var/www/html
+WORKDIR ${APPLICATION_PATH}
 
 COPY etc/apache2/apache2.conf /etc/apache2/apache2.conf
 COPY usr/local/etc/php-fpm.conf /usr/local/etc/php-fpm.conf
