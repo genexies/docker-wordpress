@@ -1,4 +1,4 @@
-FROM wordpress:4.7.2-fpm
+FROM wordpress:5.1.1
 
 MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 
