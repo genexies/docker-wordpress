@@ -14,6 +14,8 @@ MAINTAINER Javier Jerónimo <jcjeronimo@genexies.net>
 # Required to install libapache2-mod-fastcgi
 RUN echo "deb http://http.us.debian.org/debian jessie main non-free" >> /etc/apt/sources.list
 
+RUN sed -i '/jessie-updates/d' /etc/apt/sources.list
+
 RUN apt-get update && apt-get install -y \
   supervisor \
   git \
